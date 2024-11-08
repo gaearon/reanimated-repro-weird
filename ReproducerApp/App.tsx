@@ -29,9 +29,9 @@ function Lightbox({onClose}) {
   const containerStyle = useAnimatedStyle(() => {
     console.log(openProgress.value);
     if (openProgress.value < 1) {
-      return {pointerEvents: 'none', backgroundColor: 'red'};
+      return {backgroundColor: 'red'};
     }
-    return {pointerEvents: 'auto', backgroundColor: 'blue'};
+    return {backgroundColor: 'blue'};
   });
 
   return (
