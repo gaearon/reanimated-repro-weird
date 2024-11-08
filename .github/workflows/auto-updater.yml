@@ -1,0 +1,49 @@
+name: Auto Updater
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  daily-auto-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: github.repository == 'react-native-community/reproducer-react-native'
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Check React Native Version
+        id: yarnoutdated
+        working-directory: ReproducerApp
+        run: yarn outdated react-native
+        continue-on-error: true
+
+      - name: Re-create the reproducer
+        id: recreate
+        if: steps.yarnoutdated.outcome == 'failure'
+        run: |
+          rm -rf ReproducerApp
+          npx @react-native-community/cli@latest init ReproducerApp --skip-install --skip-git-init
+          cd ReproducerApp
+          yarn config set -H enableImmutableInstalls false
+          yarn
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add --all
+          git commit -m "Update reproducer to latest React Native version"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        if: steps.yarnoutdated.outcome == 'failure'
+        with:
+          branch: main
+          github_token: ${{ secrets.GITHUB_TOKEN }}

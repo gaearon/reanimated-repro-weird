@@ -1,0 +1,70 @@
+name: Pre Merge Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  test-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: "17"
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Yarn Install
+        run: yarn install
+        working-directory: ReproducerApp
+
+      - name: Yarn Build Android Debug
+        run: yarn react-native build-android
+        working-directory: ReproducerApp
+
+      - name: Yarn Build Android Release
+        run: yarn react-native build-android --mode=Release
+        working-directory: ReproducerApp
+
+  test-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Setup XCode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 15.3.x
+
+      - name: Yarn Install
+        run: yarn install
+        working-directory: ReproducerApp
+
+      - name: pod install
+        run: pod install
+        working-directory: ReproducerApp/ios
+
+      - name: Yarn Build iOS
+        run: yarn react-native build-ios
+        working-directory: ReproducerApp
